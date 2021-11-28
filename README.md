@@ -1,3 +1,3 @@
 # PGO-CO
 
-Profile guided optimization in LLVM via combinatorial optimization and hyperheuristics.
+Profile guided optimization of LLVM-IR via combinatorial optimization and metaheuristics.
