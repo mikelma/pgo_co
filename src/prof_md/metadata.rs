@@ -2,7 +2,7 @@ use llvm_sys::{core::*, prelude::*, LLVMTypeKind};
 
 use std::ffi::CStr;
 
-use super::llvm_utils as utils;
+use crate::llvm_utils as utils;
 
 #[derive(Debug)]
 pub enum Metadata {

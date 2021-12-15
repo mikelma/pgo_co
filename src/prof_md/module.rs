@@ -8,8 +8,8 @@ use std::path::Path;
 use std::ffi::{CStr, CString};
 use std::mem;
 
-use super::{Context, Function};
-use super::llvm_utils as utils; 
+use super::{Context, Function, Metadata};
+use crate::llvm_utils as utils; 
 
 
 #[derive(Debug)]
@@ -83,6 +83,42 @@ impl Module {
         // println!("Functions:\n{:#?}", functions);
 
         Ok(Self { functions })
+    }
+
+    /// Returns a list of all the functions of the module ordered by the entry count metadata
+    /// (in descending order). 
+    pub fn functions_sort_hottest(&self) -> Vec<(u64, &Function)> {
+        let mut funcs = vec![];
+
+        for func in &self.functions {
+            if let Some(entry_md) = &func.entry_md {
+                match entry_md {
+                    Metadata::Node(nodes) => {
+                        let mut it = nodes.iter();
+                        if let Some(Metadata::String(str_data)) = it.next() {
+                            if str_data == "function_entry_count" {
+                                match it.next() {
+                                    Some(Metadata::IntValue(data)) => {
+                                        funcs.push((data, func));
+                                    },
+                                    _ => unreachable!(),
+                                }
+                            } else {
+                                continue;
+                            }
+                        }
+                    },
+                    _ => continue,
+                }
+            }
+        }
+
+        funcs.sort_by_key(|(ec, _)| *ec);
+
+        funcs.iter()
+            .rev()
+            .map(|&(v, f)| (*v,f))
+            .collect()
     }
 } 
 

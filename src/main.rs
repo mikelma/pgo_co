@@ -1,4 +1,4 @@
-use pgo_co::Module;
+use pgo_co::prof_md::Module;
 
 use std::env;
 
@@ -12,5 +12,9 @@ fn main() {
     };
 
     let module = Module::from_bc_path(path).unwrap();
-    println!("{:#?}", module);
+    // println!("{:#?}", module);
+    
+    module.functions_sort_hottest()
+          .iter()
+          .for_each(|(v, f)| println!("{}: {}", v, f.name));
 }

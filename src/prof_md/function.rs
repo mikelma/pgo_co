@@ -4,7 +4,7 @@ use llvm::core::*;
 use llvm::prelude::*;
 use llvm::LLVMOpcode;
 
-use super::llvm_utils as utils;
+use crate::llvm_utils as utils;
 use super::Metadata;
 
 #[derive(Debug)]

@@ -1,7 +1,5 @@
 mod module;
 mod context;
-mod llvm_utils;
-mod iterators;
 mod metadata;
 mod function;
 
