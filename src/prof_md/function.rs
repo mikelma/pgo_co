@@ -41,6 +41,28 @@ impl Function {
         }
     }
 
+    pub fn get_entry_count(&self) -> Option<u64> {
+        // check if the `entry_md` of the function is a metadata node
+        if let Some(Metadata::Node(nodes)) = &self.entry_md {
+            let mut it = nodes.iter();
+
+            // get the string that indicates the name of the metadata
+            if let Some(Metadata::String(str_data)) = it.next() {
+                if str_data == "function_entry_count" {
+                    match it.next() {
+                        Some(Metadata::IntValue(data)) => {
+                            return Some(*data);
+                        },
+                        _ => unreachable!(),
+                    }
+
+                // the metadata node doesn't contain the info we want
+                }
+            } 
+        } 
+        None
+    }
+
     /*
     fn bbs_first_pass(
         bb: LLVMBasicBlockRef,

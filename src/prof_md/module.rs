@@ -8,7 +8,7 @@ use std::path::Path;
 use std::ffi::{CStr, CString};
 use std::mem;
 
-use super::{Context, Function, Metadata};
+use super::{Context, Function};
 use crate::llvm_utils as utils; 
 
 
@@ -91,6 +91,7 @@ impl Module {
         let mut funcs = vec![];
 
         for func in &self.functions {
+            /*
             if let Some(entry_md) = &func.entry_md {
                 match entry_md {
                     Metadata::Node(nodes) => {
@@ -111,13 +112,17 @@ impl Module {
                     _ => continue,
                 }
             }
+            */
+            if let Some(count) = func.get_entry_count() {
+                funcs.push((count, func));
+            }
         }
 
         funcs.sort_by_key(|(ec, _)| *ec);
 
         funcs.iter()
             .rev()
-            .map(|&(v, f)| (*v,f))
+            .map(|&(v, f)| (v,f))
             .collect()
     }
 } 

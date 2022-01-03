@@ -17,4 +17,9 @@ fn main() {
     module.functions_sort_hottest()
           .iter()
           .for_each(|(v, f)| println!("{}: {}", v, f.name));
+
+    println!("\n Read order:");
+    module.functions
+          .iter()
+          .for_each(|f| println!("{}: {}", f.name, f.get_entry_count().unwrap_or(0)));
 }
