@@ -1,4 +1,4 @@
-use pgo_co::prof_md::Module;
+use pgo_co::profdata::Module;
 
 use std::env;
 
