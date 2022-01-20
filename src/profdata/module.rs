@@ -6,6 +6,7 @@ use llvm::bit_reader::LLVMParseBitcodeInContext2;
 use std::path::Path;
 use std::ffi::{CStr, CString};
 use std::mem;
+use std::mem::MaybeUninit;
 
 use super::{Context, Function};
 use crate::llvm_utils as utils; 
@@ -70,7 +71,6 @@ impl Module {
         let mut functions = vec![]; 
 
         for fn_ref in utils::get_defined_functions(module_ref) {
-
             // function_md.push(Metadata::extract_metadata(fn_ref, kind_id));
 
             // let bbs_refs = utils::get_basic_blocks(fn_ref);
@@ -134,6 +134,21 @@ impl Module {
             .rev()
             .map(|&(v, f)| (v,f))
             .collect()
+    }
+
+    pub fn to_path(&self, path_str: &str) -> Result<(), String> {
+        unsafe {
+            let filename_cstr = utils::to_c_str(path_str);
+            let mut err_str = MaybeUninit::uninit();
+
+            if LLVMPrintModuleToFile(self.module_ref, filename_cstr.as_ptr(), err_str.as_mut_ptr()) != 0 {
+                let err_str = err_str.assume_init();
+                Err(CString::from_raw(err_str).to_string_lossy().to_string())
+
+            } else {
+                Ok(())
+            }
+        }
     }
 } 
 
