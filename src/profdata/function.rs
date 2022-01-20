@@ -12,6 +12,7 @@ pub struct Function {
     pub name: String,
     pub entry_md: Option<Metadata>,
     pub bb_terminator_md: Vec<Option<Metadata>>,
+    pub function_ref: LLVMValueRef,
 }
 
 impl Function {
@@ -38,6 +39,7 @@ impl Function {
             name,
             entry_md,
             bb_terminator_md,
+            function_ref: fn_ref,
         }
     }
 
@@ -61,6 +63,15 @@ impl Function {
             } 
         } 
         None
+    }
+
+    pub fn get_id(&self) -> String {
+        unsafe { 
+            let mut len = 0;
+            let ptr = LLVMGetValueName2(self.function_ref, &mut len);
+
+            utils::raw_to_string(ptr)
+        }
     }
 
     /*

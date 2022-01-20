@@ -1,5 +1,4 @@
 use llvm_sys as llvm;
-
 use llvm::prelude::*;
 use llvm::core::*;
 use llvm::bit_reader::LLVMParseBitcodeInContext2;
@@ -15,6 +14,7 @@ use crate::llvm_utils as utils;
 #[derive(Debug)]
 pub struct Module {
     pub functions: Vec<Function>,
+    pub module_ref: LLVMModuleRef,
 }
 
 impl Module {
@@ -82,7 +82,17 @@ impl Module {
 
         // println!("Functions:\n{:#?}", functions);
 
-        Ok(Self { functions })
+        Ok(Self { functions, module_ref })
+    }
+
+    
+    pub fn get_id(&self) -> String {
+        unsafe { 
+            let mut len = 0;
+            let ptr = LLVMGetModuleIdentifier(self.module_ref, &mut len);
+
+            utils::raw_to_string(ptr)
+        }
     }
 
     /// Returns a list of all the functions of the module ordered by the entry count metadata

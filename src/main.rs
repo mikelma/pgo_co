@@ -12,14 +12,29 @@ fn main() {
     };
 
     let module = Module::from_bc_path(path).unwrap();
-    // println!("{:#?}", module);
     
+    println!("\nHottest function sort (module: {}):", module.get_id());
     module.functions_sort_hottest()
           .iter()
           .for_each(|(v, f)| println!("{}: {}", v, f.name));
 
-    println!("\n Read order:");
+    let hottest_order = module.functions_sort_hottest()
+        .iter()
+        .map(|(_, f)| f.name.as_str())
+        .collect::<Vec<&str>>();
+
+    println!("\nRead order (module: {}):", module.get_id());
     module.functions
           .iter()
-          .for_each(|f| println!("{}: {}", f.name, f.get_entry_count().unwrap_or(0)));
+          .for_each(|f| println!("{}: {}", f.get_id(), f.get_entry_count().unwrap_or(0)));
+
+    let ctx = pgo_co::ir_modifier::Context::new();
+    // let new_module = ctx.create_module_from(&module, &["free_list", "list_fill_seq", "list_get_seq_values"]);
+    let new_module = ctx.create_module_from(&module, &hottest_order);
+
+    // new_module.to_path("probatzen.ll").unwrap();
+    
+    if let Err(err) = new_module.verify() {
+        println!("{}", err);
+    }
 }
