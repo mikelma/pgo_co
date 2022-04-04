@@ -4,15 +4,18 @@ use llvm::core::*;
 use llvm::prelude::*;
 use llvm::LLVMOpcode;
 
-use crate::llvm_utils as utils;
 use super::Metadata;
+use crate::llvm_utils as utils;
 
 #[derive(Debug)]
 pub struct Function {
     pub name: String,
     pub entry_md: Option<Metadata>,
     pub bb_terminator_md: Vec<Option<Metadata>>,
+    pub num_bbs: usize,
     pub function_ref: LLVMValueRef,
+    pub bbs_branch_tree: Vec<Vec<usize>>,
+    pub bbs_num_instrs: Vec<usize>,
 }
 
 impl Function {
@@ -21,25 +24,59 @@ impl Function {
 
         let entry_md = Metadata::extract_metadata(fn_ref, kind_id);
 
-        let bbs_refs = utils::get_basic_blocks(fn_ref);
-        let mut bb_terminator_md = vec![];
-        for bb_ref in bbs_refs {
-            let term = unsafe { LLVMGetBasicBlockTerminator(bb_ref) };
+        let bbs_refs: Vec<LLVMBasicBlockRef> = utils::get_basic_blocks(fn_ref).collect();
 
-            bb_terminator_md.push(
-                if unsafe { LLVMGetInstructionOpcode(term) } == LLVMOpcode::LLVMBr {
-                    Metadata::extract_metadata(term, kind_id)
-                } else {
-                    None
-                },
-            );
+        let num_bbs = bbs_refs.len();
+        let mut branch_tree: Vec<Vec<usize>> = vec![vec![]; num_bbs];
+        let mut bbs_num_instrs = vec![];
+
+        let mut bb_terminator_md = vec![];
+        for (i, bb_ref) in bbs_refs.iter().enumerate() {
+            // count the number of instructions in the block
+            let mut num_instr = 1;
+            unsafe {
+                let mut instr = LLVMGetFirstInstruction(*bb_ref);
+                loop {
+                    instr = LLVMGetNextInstruction(instr);
+                    if instr.is_null() {
+                        break;
+                    }
+                    num_instr += 1;
+                }
+            }
+
+            bbs_num_instrs.push(num_instr);
+
+            let term = unsafe { LLVMGetBasicBlockTerminator(*bb_ref) };
+
+            // extract terminator instruction's metadata
+            if unsafe { LLVMGetInstructionOpcode(term) } == LLVMOpcode::LLVMBr {
+                bb_terminator_md.push(Metadata::extract_metadata(term, kind_id));
+
+                // get the parent of the current basick block
+                let num_operands = unsafe { LLVMGetNumOperands(term) } as u32;
+                // the first operand of the `br` instruction is skipped when it refers to the
+                // condition value of the branch operation
+                let start_idx = if num_operands > 1 { 1 } else { 0 };
+                // NOTE: for some reason `rev` has to be used to read the operands
+                // in the same order as in the LLVM-IR
+                for op_idx in (start_idx..num_operands).rev() {
+                    let bb_to_jump = unsafe { LLVMValueAsBasicBlock(LLVMGetOperand(term, op_idx)) };
+                    branch_tree[i].push(bbs_refs.iter().position(|&bb| bb == bb_to_jump).unwrap());
+                }
+            } else {
+                bb_terminator_md.push(None);
+            }
         }
 
         Function {
             name,
             entry_md,
             bb_terminator_md,
+            num_bbs,
             function_ref: fn_ref,
+            bbs_branch_tree: branch_tree,
+            bbs_num_instrs,
         }
     }
 
@@ -54,19 +91,19 @@ impl Function {
                     match it.next() {
                         Some(Metadata::IntValue(data)) => {
                             return Some(*data);
-                        },
+                        }
                         _ => unreachable!(),
                     }
 
-                // the metadata node doesn't contain the info we want
+                    // the metadata node doesn't contain the info we want
                 }
-            } 
-        } 
+            }
+        }
         None
     }
 
     pub fn get_id(&self) -> String {
-        unsafe { 
+        unsafe {
             let mut len = 0;
             let ptr = LLVMGetValueName2(self.function_ref, &mut len);
 

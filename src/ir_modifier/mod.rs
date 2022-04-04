@@ -1,31 +1,15 @@
-// use llvm::analysis::LLVMVerifyModule;
-use llvm_sys as llvm;
-use llvm::prelude::*;
 use llvm::core::*;
-// use llvm::analysis::LLVMVerifierFailureAction;
-use rand::seq::SliceRandom;
-
-// use std::ffi::CString;
-// use std::mem::MaybeUninit;
-// use std::mem::forget;
+use llvm::prelude::*;
+use llvm_sys as llvm;
 
 use crate::llvm_utils as utils;
-// use crate::profdata;
-// use profdata::Module as ProfDataModule;
 
-pub fn reorder_blocks(function: LLVMValueRef) {
-    let mut rng = rand::thread_rng();
+pub fn reorder_blocks(function: LLVMValueRef, order: &[usize]) {
+    let entry = unsafe { LLVMGetFirstBasicBlock(function) };
+    let bbs: Vec<LLVMBasicBlockRef> = utils::get_basic_blocks(function).skip(1).collect();
     unsafe {
-        let entry = LLVMGetFirstBasicBlock(function);
-
-        let mut bbs: Vec<LLVMBasicBlockRef> = utils::get_basic_blocks(function)
-            .skip(1)
-            .collect();
-
-        bbs.shuffle(&mut rng);
-
-        for bb in bbs.iter().rev() {
-            LLVMMoveBasicBlockAfter(*bb, entry);
+        for index in order.iter().rev() {
+            LLVMMoveBasicBlockAfter(bbs[*index], entry);
         }
     }
 }
@@ -37,7 +21,7 @@ pub struct Context {
 
 pub struct Module {
     module_ref: LLVMModuleRef,
-} 
+}
 
 impl Context {
     pub fn new() -> Self {
@@ -52,7 +36,7 @@ impl Context {
         let mod_ref = profdata_mod.module_ref;
 
         let mut deleted = None;
-        
+
         for func_ref in utils::get_defined_functions(mod_ref) {
             let name = utils::get_value_name(func_ref);
 
@@ -84,8 +68,8 @@ impl Context {
 
     /// Creates a new LLVM module, based on the given `pprofdata::Module` and the function order
     /// list.
-    pub fn create_module_from(&mut self, 
-                              profdata_mod: &ProfDataModule, 
+    pub fn create_module_from(&mut self,
+                              profdata_mod: &ProfDataModule,
                               function_order: &[&str]) -> Module {
         let module_ref = unsafe {
             let mod_ref = LLVMCloneModule(profdata_mod.module_ref);
@@ -100,7 +84,7 @@ impl Context {
             }
 
             self.ctx_ref = LLVMGetModuleContext(mod_ref);
-             
+
             mod_ref
         };
 
@@ -119,8 +103,8 @@ impl Context {
 
                 let fn_ty = LLVMTypeOf(profdata_func.function_ref);
 
-                println!("Number of params: {} -> {}", 
-                         utils::get_value_name(profdata_func.function_ref), 
+                println!("Number of params: {} -> {}",
+                         utils::get_value_name(profdata_func.function_ref),
                          LLVMCountParams(profdata_func.function_ref));
 
                 let ret_ty = LLVMGetReturnType(fn_ty);
@@ -132,7 +116,7 @@ impl Context {
                 let ptr = raw_vec.as_mut_ptr();
                 forget(raw_vec);
                 LLVMGetParams(profdata_func.function_ref, ptr);
-                let raw_vec = { 
+                let raw_vec = {
                     Vec::from_raw_parts(ptr, count as usize, count as usize)
                 };
                 */
@@ -142,7 +126,7 @@ impl Context {
                 let ptr = raw_vec.as_mut_ptr();
                 forget(raw_vec);
                 LLVMGetParamTypes(fn_ty, ptr);
-                let mut raw_vec = { 
+                let mut raw_vec = {
                     Vec::from_raw_parts(ptr, count as usize, count as usize)
                 };
 
@@ -158,8 +142,8 @@ impl Context {
                 // add the new function to the new module
                 let new_fn = LLVMAddFunction(module_ref, id, fn_ty);
 
-                println!("New number of params: {} -> {}\n", 
-                         utils::get_value_name(new_fn), 
+                println!("New number of params: {} -> {}\n",
+                         utils::get_value_name(new_fn),
                          LLVMCountParams(new_fn));
 
                 // append each basic block of the olf function to the new one
@@ -171,7 +155,7 @@ impl Context {
 
         // unsafe { LLVMDumpModule(module_ref); }
 
-        Module { module_ref } 
+        Module { module_ref }
     }
 }
 

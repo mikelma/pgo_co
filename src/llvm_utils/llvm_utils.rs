@@ -1,14 +1,14 @@
 #![allow(unused_imports)]
 #![allow(dead_code)]
 
-use llvm_sys::prelude::*;
 use llvm_sys::core::*;
+use llvm_sys::prelude::*;
 
 pub use super::iterators::*;
 
-use std::ffi::{CStr, CString};
 use libc::c_char;
 use std::borrow::Cow;
+use std::ffi::{CStr, CString};
 
 // We convert all LLVM strings to owned Strings (which involves a copy)
 // partly because we intend to serialize/deserialize our ASTs eventually
@@ -18,7 +18,9 @@ pub unsafe fn raw_to_string(raw: *const c_char) -> String {
 }
 
 pub fn rust_to_cstr(value: &str) -> *const c_char {
-    CString::new(value).expect("Cannot converto string to C str").into_raw()
+    CString::new(value)
+        .expect("Cannot converto string to C str")
+        .into_raw()
 }
 
 pub(crate) fn to_c_str<'s>(mut s: &'s str) -> Cow<'s, CStr> {
@@ -31,9 +33,7 @@ pub(crate) fn to_c_str<'s>(mut s: &'s str) -> Cow<'s, CStr> {
         return Cow::from(CString::new(s).expect("unreachable since null bytes are checked"));
     }
 
-    unsafe {
-        Cow::from(CStr::from_ptr(s.as_ptr() as *const _))
-    }
+    unsafe { Cow::from(CStr::from_ptr(s.as_ptr() as *const _)) }
 }
 
 macro_rules! wrap {
@@ -97,7 +97,11 @@ macro_rules! wrap_bool {
 }
 
 wrap_with_len!(LLVMGetModuleInlineAsm, LLVMModuleRef, get_module_inline_asm);
-wrap_with_len!(LLVMGetModuleIdentifier, LLVMModuleRef, get_module_identifier);
+wrap_with_len!(
+    LLVMGetModuleIdentifier,
+    LLVMModuleRef,
+    get_module_identifier
+);
 wrap_with_len!(LLVMGetSourceFileName, LLVMModuleRef, get_source_file_name);
 wrap!(LLVMGetDataLayoutStr, LLVMModuleRef, get_data_layout_str);
 wrap_maybe_null!(LLVMGetTarget, LLVMModuleRef, get_target);
@@ -108,10 +112,22 @@ wrap_maybe_null!(LLVMGetGC, LLVMValueRef, get_gc);
 wrap!(LLVMGetBasicBlockName, LLVMBasicBlockRef, get_bb_name);
 wrap!(LLVMPrintValueToString, LLVMValueRef, print_to_string);
 // wrap!(LLVMPrintTypeToString, LLVMTypeRef, print_type_to_string);
-wrap_with_len!(LLVMGetStringAttributeKind, LLVMAttributeRef, get_string_attribute_kind);
-wrap_with_len!(LLVMGetStringAttributeValue, LLVMAttributeRef, get_string_attribute_value);
+wrap_with_len!(
+    LLVMGetStringAttributeKind,
+    LLVMAttributeRef,
+    get_string_attribute_kind
+);
+wrap_with_len!(
+    LLVMGetStringAttributeValue,
+    LLVMAttributeRef,
+    get_string_attribute_value
+);
 wrap_with_len_maybe_null!(LLVMGetDebugLocFilename, LLVMValueRef, get_debugloc_filename);
-wrap_with_len_maybe_null!(LLVMGetDebugLocDirectory, LLVMValueRef, get_debugloc_directory);
+wrap_with_len_maybe_null!(
+    LLVMGetDebugLocDirectory,
+    LLVMValueRef,
+    get_debugloc_directory
+);
 
 wrap_bool!(LLVMHasMetadata, LLVMValueRef, has_metadata);
 

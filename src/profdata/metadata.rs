@@ -11,7 +11,7 @@ pub enum Metadata {
 
     IntValue(u64),
     FloatValue(f64),
-} 
+}
 
 impl Metadata {
     pub fn extract_metadata(value_ref: LLVMValueRef, kind_id: u32) -> Option<Self> {
@@ -20,9 +20,7 @@ impl Metadata {
             return None;
         }
 
-        let md_ref = unsafe {
-            llvm_sys::core::LLVMGetMetadata(value_ref, kind_id)
-        };
+        let md_ref = unsafe { llvm_sys::core::LLVMGetMetadata(value_ref, kind_id) };
 
         if md_ref.is_null() {
             return None;
@@ -34,27 +32,29 @@ impl Metadata {
     fn from_value_ref(value_ref: LLVMValueRef) -> Metadata {
         unsafe {
             match LLVMGetTypeKind(LLVMTypeOf(value_ref)) {
-                LLVMTypeKind::LLVMFloatTypeKind 
-                    | LLVMTypeKind::LLVMDoubleTypeKind => {
+                LLVMTypeKind::LLVMFloatTypeKind | LLVMTypeKind::LLVMDoubleTypeKind => {
                     let mut _lossy = 0; // whether the value has lost any info
                     let constant = LLVMConstRealGetDouble(value_ref, &mut _lossy);
 
                     Metadata::FloatValue(constant)
-                },
+                }
                 LLVMTypeKind::LLVMIntegerTypeKind => {
                     // Metadata::IntValue(LLVMConstIntGetSExtValue(value_ref))
                     Metadata::IntValue(LLVMConstIntGetZExtValue(value_ref))
-                },
+                }
                 LLVMTypeKind::LLVMMetadataTypeKind => {
                     if Self::is_string(value_ref) {
                         let str_val = Self::get_string_value(value_ref).unwrap();
                         Metadata::String(str_val)
-
-                    } else { // is node
-                        let values: Vec<Metadata> = Self::get_node_values(value_ref).iter().map(|&v| Self::from_value_ref(v)).collect();
+                    } else {
+                        // is node
+                        let values: Vec<Metadata> = Self::get_node_values(value_ref)
+                            .iter()
+                            .map(|&v| Self::from_value_ref(v))
+                            .collect();
                         Metadata::Node(values)
                     }
-                },
+                }
                 _ => unimplemented!(),
             }
         }
@@ -73,9 +73,7 @@ impl Metadata {
             return 0;
         }
 
-        unsafe {
-            LLVMGetMDNodeNumOperands(value_ref)
-        }
+        unsafe { LLVMGetMDNodeNumOperands(value_ref) }
     }
 
     fn get_string_value(value_ref: LLVMValueRef) -> Option<String> {
@@ -84,9 +82,7 @@ impl Metadata {
         }
 
         let mut len = 0;
-        let c_str = Box::new(unsafe {
-            CStr::from_ptr(LLVMGetMDString(value_ref, &mut len))
-        });
+        let c_str = Box::new(unsafe { CStr::from_ptr(LLVMGetMDString(value_ref, &mut len)) });
 
         // this can panic with an `Utf8Error`
         Some(c_str.to_str().unwrap().into())
@@ -97,7 +93,7 @@ impl Metadata {
             return vec![];
         }
 
-        let count = Self::get_node_size(value_ref) as usize; 
+        let count = Self::get_node_size(value_ref) as usize;
         let mut values: Vec<LLVMValueRef> = Vec::with_capacity(count);
         let ptr = values.as_mut_ptr();
 

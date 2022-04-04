@@ -1,9 +1,9 @@
-mod module;
 mod context;
-mod metadata;
 mod function;
+mod metadata;
+mod module;
 
 pub use context::Context;
-pub use module::Module;
-pub use metadata::Metadata;
 pub use function::Function;
+pub use metadata::Metadata;
+pub use module::Module;

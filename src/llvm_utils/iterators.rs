@@ -1,8 +1,8 @@
 #![allow(unused_imports)]
 #![allow(dead_code)]
 
-use llvm_sys::prelude::*;
 use llvm_sys::core::*;
+use llvm_sys::prelude::*;
 use std::iter::Peekable;
 
 pub fn get_defined_functions(module: LLVMModuleRef) -> impl Iterator<Item = LLVMValueRef> {
@@ -136,7 +136,7 @@ impl<I: Iterator> Iterator for AllButLastIterator<I> {
                 } else {
                     None
                 }
-            },
+            }
         }
     }
 }

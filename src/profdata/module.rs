@@ -1,16 +1,15 @@
-use llvm_sys as llvm;
-use llvm::prelude::*;
-use llvm::core::*;
 use llvm::bit_reader::LLVMParseBitcodeInContext2;
+use llvm::core::*;
+use llvm::prelude::*;
+use llvm_sys as llvm;
 
-use std::path::Path;
 use std::ffi::{CStr, CString};
 use std::mem;
 use std::mem::MaybeUninit;
+use std::path::Path;
 
 use super::{Context, Function};
-use crate::llvm_utils as utils; 
-
+use crate::llvm_utils as utils;
 
 #[derive(Debug)]
 pub struct Module {
@@ -28,7 +27,7 @@ impl Module {
         )
         .expect("Failed to convert to CString");
 
-        // read the module's bitcode into a memory buffer 
+        // read the module's bitcode into a memory buffer
         let memory_buffer = unsafe {
             let mut memory_buffer = std::ptr::null_mut();
             let mut err_string = std::mem::zeroed();
@@ -68,7 +67,7 @@ impl Module {
 
         let kind_id = context.get_kind_id("prof");
 
-        let mut functions = vec![]; 
+        let mut functions = vec![];
 
         for fn_ref in utils::get_defined_functions(module_ref) {
             // function_md.push(Metadata::extract_metadata(fn_ref, kind_id));
@@ -76,18 +75,20 @@ impl Module {
             // let bbs_refs = utils::get_basic_blocks(fn_ref);
             // println!("basic blocks count: {}", bbs_refs.count());
             // panic!();
-            
+
             functions.push(Function::from_llvm_ref(fn_ref, kind_id));
         }
 
         // println!("Functions:\n{:#?}", functions);
 
-        Ok(Self { functions, module_ref })
+        Ok(Self {
+            functions,
+            module_ref,
+        })
     }
 
-    
     pub fn get_id(&self) -> String {
-        unsafe { 
+        unsafe {
             let mut len = 0;
             let ptr = LLVMGetModuleIdentifier(self.module_ref, &mut len);
 
@@ -96,7 +97,7 @@ impl Module {
     }
 
     /// Returns a list of all the functions of the module ordered by the entry count metadata
-    /// (in descending order). 
+    /// (in descending order).
     pub fn functions_sort_hottest(&self) -> Vec<(u64, &Function)> {
         let mut funcs = vec![];
 
@@ -130,10 +131,7 @@ impl Module {
 
         funcs.sort_by_key(|(ec, _)| *ec);
 
-        funcs.iter()
-            .rev()
-            .map(|&(v, f)| (v,f))
-            .collect()
+        funcs.iter().rev().map(|&(v, f)| (v, f)).collect()
     }
 
     pub fn to_path(&self, path_str: &str) -> Result<(), String> {
@@ -141,16 +139,20 @@ impl Module {
             let filename_cstr = utils::to_c_str(path_str);
             let mut err_str = MaybeUninit::uninit();
 
-            if LLVMPrintModuleToFile(self.module_ref, filename_cstr.as_ptr(), err_str.as_mut_ptr()) != 0 {
+            if LLVMPrintModuleToFile(
+                self.module_ref,
+                filename_cstr.as_ptr(),
+                err_str.as_mut_ptr(),
+            ) != 0
+            {
                 let err_str = err_str.assume_init();
                 Err(CString::from_raw(err_str).to_string_lossy().to_string())
-
             } else {
                 Ok(())
             }
         }
     }
-} 
+}
 
 /*
 impl Drop for Module {

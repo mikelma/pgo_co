@@ -1,7 +1,4 @@
-use llvm_sys::{
-    prelude::*, 
-    core::*,
-};
+use llvm_sys::{core::*, prelude::*};
 
 pub struct Context {
     pub ctx: LLVMContextRef,
@@ -15,16 +12,18 @@ impl Context {
     }
 
     pub fn from_module(module: LLVMModuleRef) -> Self {
-        let ctx = unsafe {
-            LLVMGetModuleContext(module)
-        };
+        let ctx = unsafe { LLVMGetModuleContext(module) };
 
         Self { ctx }
     }
 
     pub fn get_kind_id(&self, key: &str) -> u32 {
         unsafe {
-            LLVMGetMDKindIDInContext(self.ctx, key.as_ptr() as *const ::libc::c_char, key.len() as u32)
+            LLVMGetMDKindIDInContext(
+                self.ctx,
+                key.as_ptr() as *const ::libc::c_char,
+                key.len() as u32,
+            )
         }
     }
 }
