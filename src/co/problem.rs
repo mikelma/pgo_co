@@ -7,16 +7,17 @@ pub struct CoProblem {
 }
 
 impl CoProblem {
-
     pub fn eval(&self, solution: &[usize]) -> u64 {
         let s_sum = self.s.iter().fold(0, |sum, v| sum + v);
 
         let mut f = 0;
-        for i in 1..self.n { // starts from 1 to skip the entry basic block
-            for j in (i+1)..self.n {
-                let interaction = self.c[solution[i]][solution[j]] + self.c[solution[j]][solution[i]];
-                let distance = self.s[i..j+1].iter().fold(0, |sum, v| sum + (s_sum - v));
-                f += interaction * distance as u64; 
+        for i in 1..self.n {
+            // starts from 1 to skip the entry basic block
+            for j in (i + 1)..self.n {
+                let interaction =
+                    self.c[solution[i]][solution[j]] + self.c[solution[j]][solution[i]];
+                let distance = self.s[i..j + 1].iter().fold(0, |sum, v| sum + (s_sum - v));
+                f += interaction * distance as u64;
             }
         }
 
@@ -40,14 +41,12 @@ impl CoProblem {
 
                 // extract branch metadata
                 let branch_weights: Vec<u64> = match leafs_iter.next() {
-                    Some(Metadata::String(name)) if name == "branch_weights" => {
-                        leafs_iter
-                            .map(|v| match v {
-                                Metadata::IntValue(w) => *w,
-                                _ => unreachable!(),
-                            })
-                            .collect()
-                    }
+                    Some(Metadata::String(name)) if name == "branch_weights" => leafs_iter
+                        .map(|v| match v {
+                            Metadata::IntValue(w) => *w,
+                            _ => unreachable!(),
+                        })
+                        .collect(),
                     _ => continue,
                 };
 
@@ -78,13 +77,19 @@ impl CoProblem {
         }
 
         // TODO: Optimize
-        // remove the data referring to the entry basic block, as 
+        // remove the data referring to the entry basic block, as
         // it dosn't take part in the optimization problem
         let s = function.bbs_num_instrs[1..num_blocks].to_vec();
         c.remove(0);
-        c.iter_mut().for_each(|row| { let _ = row.remove(0); });
+        c.iter_mut().for_each(|row| {
+            let _ = row.remove(0);
+        });
 
-        Some(CoProblem { c, s, n: num_blocks-1 })
+        Some(CoProblem {
+            c,
+            s,
+            n: num_blocks - 1,
+        })
     }
 
     fn fill_missing_branch_weights(
@@ -123,8 +128,9 @@ impl CoProblem {
                 // note: the missing branch could be removed in the recursive call above
                 // that's why there's an `if let` here
                 if let Some(idx) = missing_branches
-                            .iter()
-                            .position(|v| *v == (parent, br_from)) {
+                    .iter()
+                    .position(|v| *v == (parent, br_from))
+                {
                     missing_branches.remove(idx);
                 }
             } else {
