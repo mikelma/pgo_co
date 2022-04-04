@@ -40,12 +40,15 @@ fn main() {
 
             let constr_sol = co::constructive::construct_solution(&problem, 3, 2);
             let (lc_sol, lc_fitness) = co::local_search::run(&problem, 1000);
+            let (eda_sol, eda_fitness) = co::eda::run(&problem, 10, 10);
 
             println!("constructive permu: {:?}", constr_sol);
             println!("lc permu:           {:?}", lc_sol);
-            println!("\nconstructive fitness: {}", problem.eval(&constr_sol));
-            println!("lc fitness:           {}", lc_fitness);
-            println!("random permu fitness: {}", problem.eval(&permu));
+            println!("eda permu:          {:?}", eda_sol);
+            println!("\nconstructive fitness:   {}", problem.eval(&constr_sol));
+            println!("lc fitness:             {}", lc_fitness);
+            println!("eda fitness:            {}", eda_fitness);
+            println!("random permu fitness:   {}", problem.eval(&permu));
             println!(
                 "function: {}, n: {}, f: {fitness}",
                 function.name, problem.n
