@@ -1,8 +1,8 @@
 use crate::profdata::{Function, Metadata};
 
 pub struct CoProblem {
-    c: Vec<Vec<u64>>,
-    s: Vec<usize>,
+    pub c: Vec<Vec<u64>>,
+    pub s: Vec<usize>,
     pub n: usize,
 }
 

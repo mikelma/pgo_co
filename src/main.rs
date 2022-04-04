@@ -1,6 +1,6 @@
 use rand::seq::SliceRandom;
 
-use pgo_co::{co::CoProblem, ir_modifier, profdata::Module};
+use pgo_co::{co::{self, CoProblem}, ir_modifier, profdata::Module};
 
 use std::env;
 
@@ -31,9 +31,13 @@ fn main() {
             let mut permu = (0..problem.n).collect::<Vec<usize>>();
             permu.shuffle(&mut rng);
 
-            // println!("permu: {:?}", permu);
-
             let fitness = problem.eval(&permu);
+            // println!("random permu: {:?}", permu);
+
+            let solution = co::constructive::construct_solution(&problem);
+            println!("constructive permu: {:?}", solution);
+            println!("constructive fitness: {}", problem.eval(&solution));
+            println!("random permu fitness: {}", problem.eval(&permu));
             println!("function: {}, n: {}, f: {fitness}", function.name, problem.n);
 
             // modify the source IR based on the solution
