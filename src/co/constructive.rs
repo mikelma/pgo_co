@@ -3,7 +3,7 @@ use rand::seq::SliceRandom;
 
 use std::collections::VecDeque;
 
-pub fn construct_solution(problem: &CoProblem) -> Vec<usize> {
+pub fn construct_solution(problem: &CoProblem, tau1: u32, tau2: u32) -> Vec<usize> {
     let mut solution = VecDeque::with_capacity(problem.n);
 
     let max_size = problem.s.iter().sum::<usize>() as u64;
@@ -40,11 +40,11 @@ pub fn construct_solution(problem: &CoProblem) -> Vec<usize> {
         // list of: (weight, (index, c_list))
         let non_selected_with_weights = non_selected
             .iter()
-            .map(|(idx, c, _)| (ord_by_interact[*idx].pow(2), (*idx, *c)))
+            .map(|(idx, c, _)| (ord_by_interact[*idx].pow(tau1), (*idx, *c)))
             .collect::<Vec<(usize, (usize, &[u64]))>>();
 
         let (_, parent) = non_selected_with_weights
-            .choose_weighted(&mut rng, |s| s.0)
+            .choose_weighted(&mut rng, |s| s.0 + 1)
             .unwrap();
 
         if push_front {
@@ -74,7 +74,7 @@ pub fn construct_solution(problem: &CoProblem) -> Vec<usize> {
 
         // contains: (child_index, child_weight)
         let mut children_weights = (0..children.len())
-            .map(|i| (i, (children.len() - i).pow(2)))
+            .map(|i| (i, (children.len() - i).pow(tau2)))
             .collect::<Vec<(usize, usize)>>();
 
         while !children_weights.is_empty() {

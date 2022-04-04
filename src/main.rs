@@ -38,9 +38,13 @@ fn main() {
             let fitness = problem.eval(&permu);
             // println!("random permu: {:?}", permu);
 
-            let solution = co::constructive::construct_solution(&problem);
-            println!("constructive permu: {:?}", solution);
-            println!("constructive fitness: {}", problem.eval(&solution));
+            let constr_sol = co::constructive::construct_solution(&problem, 3, 2);
+            let (lc_sol, lc_fitness) = co::local_search::run(&problem, 1000);
+
+            println!("constructive permu: {:?}", constr_sol);
+            println!("lc permu:           {:?}", lc_sol);
+            println!("\nconstructive fitness: {}", problem.eval(&constr_sol));
+            println!("lc fitness:           {}", lc_fitness);
             println!("random permu fitness: {}", problem.eval(&permu));
             println!(
                 "function: {}, n: {}, f: {fitness}",
