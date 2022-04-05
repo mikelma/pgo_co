@@ -42,10 +42,6 @@ pub fn run(problem: &CoProblem, pop_size: usize, iters: usize) -> (Vec<usize>, u
         let distrib = Umd::from(&bests);
 
         distrib.sample_and_replace(&mut pop, &worsts_index);
-
-        if best_sol.is_empty() {
-            panic!();
-        }
     }
 
     (best_sol, best_f)
