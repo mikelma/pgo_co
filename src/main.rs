@@ -34,31 +34,37 @@ fn main() {
             // generate a random solution
             let mut permu = (0..problem.n).collect::<Vec<usize>>();
             permu.shuffle(&mut rng);
-
             let fitness = problem.eval(&permu);
-            // println!("random permu: {:?}", permu);
 
-            let constr_sol = co::constructive::construct_solution(&problem, 3, 2);
+            let identity = (0..problem.n).collect::<Vec<usize>>();
+
+            // let constr_sol = co::constructive::construct_solution(&problem, 3, 2);
             let (lc_sol, lc_fitness) = co::local_search::run(&problem, 1000);
-            let (sa_sol, sa_fitness) = co::sa::run(&problem, 1000, 1000000.0, 0.95, 10000.0, 100);
-            let (eda_sol, eda_fitness) = co::eda::run(&problem, 10, 10);
+            // let (sa_sol, sa_fitness) = co::sa::run(&problem, 1000, 1000000.0, 0.95, 10000.0, 100);
+            // let (eda_sol, eda_fitness) = co::eda::run(&problem, 10, 10);
 
-            println!("constructive permu: {:?}", constr_sol);
-            println!("lc permu:           {:?}", lc_sol);
-            println!("sa permu:           {:?}", sa_sol);
-            println!("eda permu:          {:?}", eda_sol);
-            println!("\nconstructive fitness:   {}", problem.eval(&constr_sol));
+            // println!("random permu: {:?}", permu);
+            // println!("constructive permu: {:?}", constr_sol);
+            // println!("lc permu:           {:?}", lc_sol);
+            // println!("sa permu:           {:?}", sa_sol);
+            // println!("eda permu:          {:?}", eda_sol);
+            // println!("\nconstructive fitness:   {}", problem.eval(&constr_sol));
+            println!("Fitness of identity:    {}", problem.eval(&identity));
             println!("lc fitness:             {}", lc_fitness);
-            println!("sa fitness:             {}", sa_fitness);
-            println!("eda fitness:            {}", eda_fitness);
-            println!("random permu fitness:   {}", problem.eval(&permu));
+            println!("Random permu fitness;   {fitness}");
+            // println!("sa fitness:             {}", sa_fitness);
+            // println!("eda fitness:            {}", eda_fitness);
+            // println!("random permu fitness:   {}", problem.eval(&permu));
             println!(
-                "function: {}, n: {}, f: {fitness}",
+                "function: {}, n: {}",
                 function.name, problem.n
             );
 
             // modify the source IR based on the solution
-            ir_modifier::reorder_blocks(function.function_ref, &permu);
+            // ir_modifier::reorder_blocks(function.function_ref, &permu);
+
+            println!("* Modifying LLVM-IR with LS solution");
+            ir_modifier::reorder_blocks(function.function_ref, &lc_sol);
         }
     }
 
