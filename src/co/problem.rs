@@ -8,16 +8,25 @@ pub struct CoProblem {
 
 impl CoProblem {
     pub fn eval(&self, solution: &[usize]) -> u64 {
-        let s_sum = self.s.iter().fold(0, |sum, v| sum + v);
+        // original: let s_sum = self.s.iter().fold(0, |sum, v| sum + v);
+        let s_sum: usize = self.s.iter().sum();
+        // println!("s_sum: {s_sum}");
 
         let mut f = 0;
-        for i in 1..self.n {
+        for i in 0..self.n {
             // starts from 1 to skip the entry basic block
             for j in (i + 1)..self.n {
                 let interaction =
                     self.c[solution[i]][solution[j]] + self.c[solution[j]][solution[i]];
-                let distance = self.s[i..j + 1].iter().fold(0, |sum, v| sum + (s_sum - v));
-                f += interaction * distance as u64;
+                // original: let distance = self.s[i..j + 1].iter().fold(0, |sum, v| sum + (s_sum - v));
+                // let distance = self.s[i..j + 1].iter().sum::<usize>();
+                let mut distance = 0;
+                for k in i..(j + 1) {
+                    distance += self.s[solution[k]];
+                }
+                // println!("i={i}, j={j}, interaction={interaction}, dist(norev)={distance}");
+                // original: f += interaction * distance as u64;
+                f += interaction * (s_sum - distance) as u64;
             }
         }
 
