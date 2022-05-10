@@ -32,9 +32,9 @@ fn main() {
     for function in &module.functions {
         if let Some(problem) = CoProblem::block_reordering_from(function) {
             // generate a random solution
-            let mut permu = (0..problem.n).collect::<Vec<usize>>();
-            permu.shuffle(&mut rng);
-            let fitness = problem.eval(&permu);
+            // let mut permu = (0..problem.n).collect::<Vec<usize>>();
+            // permu.shuffle(&mut rng);
+            // let fitness = problem.eval(&permu);
 
             let identity = (0..problem.n).collect::<Vec<usize>>();
 
@@ -51,14 +51,11 @@ fn main() {
             // println!("\nconstructive fitness:   {}", problem.eval(&constr_sol));
             println!("Fitness of identity:    {}", problem.eval(&identity));
             println!("lc fitness:             {}", lc_fitness);
-            println!("Random permu fitness;   {fitness}");
+            // println!("Random permu fitness;   {fitness}");
             // println!("sa fitness:             {}", sa_fitness);
             // println!("eda fitness:            {}", eda_fitness);
             // println!("random permu fitness:   {}", problem.eval(&permu));
-            println!(
-                "function: {}, n: {}",
-                function.name, problem.n
-            );
+            println!("function: {}, n: {}", function.name, problem.n);
 
             // modify the source IR based on the solution
             // ir_modifier::reorder_blocks(function.function_ref, &permu);
