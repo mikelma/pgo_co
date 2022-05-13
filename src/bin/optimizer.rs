@@ -28,7 +28,7 @@ fn main() {
 
     let module = Module::from_bc_path(in_path).unwrap();
     let mut rng = rand::thread_rng();
-
+    /*
     for function in &module.functions {
         if let Some(problem) = CoProblem::block_reordering_from(function) {
             // generate a random solution
@@ -66,4 +66,5 @@ fn main() {
     }
 
     module.to_path(&out_path).unwrap();
+    */
 }

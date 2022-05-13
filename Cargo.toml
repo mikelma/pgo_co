@@ -4,12 +4,16 @@ version = "0.1.0"
 edition = "2018"
 
 [[bin]]
-name = "pgo_optimizer"
-path = "src/optimizer.rs"
+name = "optimizer"
+path = "src/bin/optimizer.rs"
 
 [[bin]]
-name = "pgo_viewer"
-path = "src/viewer.rs"
+name = "inspector"
+path = "src/bin/inspector.rs"
+
+[[bin]]
+name = "generator"
+path = "src/bin/generator.rs"
 
 [dependencies]
 inkwell = { git = "https://github.com/TheDan64/inkwell", branch = "master", features = ["llvm12-0"] }
