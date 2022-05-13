@@ -22,7 +22,7 @@ fn main() {
         map.insert(func.name, problem);
     }
 
-    let inst_str = ron::to_string(&map).unwrap();
+    let inst_str = serde_json::to_string(&map).unwrap();
 
     match args.next() {
         Some(p) => fs::write(p, inst_str).unwrap(),

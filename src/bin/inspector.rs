@@ -1,8 +1,4 @@
-use pgo_co::{
-    co::{self, CoProblem},
-    ir_modifier,
-    profdata::Module,
-};
+use pgo_co::{co, profdata::Module};
 
 use std::env;
 

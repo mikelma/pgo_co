@@ -1,7 +1,7 @@
 use crate::profdata::{Function, Metadata};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct CoProblem {
     pub c: Vec<Vec<u64>>,
     pub s: Vec<usize>,
