@@ -16,3 +16,5 @@ inkwell = { git = "https://github.com/TheDan64/inkwell", branch = "master", feat
 llvm-sys = "120"
 libc = "0.2"
 rand = { version = "0.8", features = ["alloc"] }
+ron = "0.7.0"
+serde = "*"

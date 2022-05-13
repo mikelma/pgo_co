@@ -1,5 +1,7 @@
 use crate::profdata::{Function, Metadata};
+use serde::Serialize;
 
+#[derive(Serialize)]
 pub struct CoProblem {
     pub c: Vec<Vec<u64>>,
     pub s: Vec<usize>,
@@ -14,7 +16,6 @@ impl CoProblem {
 
         let mut f = 0;
         for i in 0..self.n {
-            // starts from 1 to skip the entry basic block
             for j in (i + 1)..self.n {
                 let interaction =
                     self.c[solution[i]][solution[j]] + self.c[solution[j]][solution[i]];
