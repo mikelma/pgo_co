@@ -2,18 +2,17 @@ use clap::Parser;
 
 use pgo_co::{co, profdata::Module};
 
-/// Inpect profile metadata from LLVM-IR bitcode 
+/// Inpect profile metadata from LLVM-IR bitcode
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
 struct Args {
     /// Name of the function to inspect. If not provided, all functions are inspected
-    #[clap(short='f', long="inspect-func")]
+    #[clap(short = 'f', long = "inspect-func")]
     inspect_func: Option<String>,
 
-    /// Path to the LLVM bitcode to inspect 
-    #[clap(short='i', long="input-bc")]
+    /// Path to the LLVM bitcode to inspect
+    #[clap(short = 'i', long = "input-bc")]
     input_bc_path: String,
-
     // TODO: Add verbosity option
     // #[clap(short, long, parse(from_occurrences))]
     // verbosity: usize

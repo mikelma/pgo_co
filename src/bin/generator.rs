@@ -5,13 +5,12 @@ use pgo_co::{co::CoProblem, profdata::Module};
 use std::collections::HashMap;
 use std::fs;
 
-
-/// Generate a CO problem instance from profiled LLVM-IR bitcode 
+/// Generate a CO problem instance from profiled LLVM-IR bitcode
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
 struct Args {
-    /// Path to the LLVM bitcode to generate the instance from 
-    #[clap(short, long="input-bc")]
+    /// Path to the LLVM bitcode to generate the instance from
+    #[clap(short, long = "input-bc")]
     input_bc_path: String,
 
     /// Path to the output file. If not provided, the output is dumped to stdout

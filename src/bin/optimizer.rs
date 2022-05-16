@@ -14,20 +14,20 @@ use std::fs;
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
 struct Args {
-    /// Path to the CO problem instance 
-    #[clap(short='p', long="instance")]
+    /// Path to the CO problem instance
+    #[clap(short = 'p', long = "instance")]
     inst_path: String,
 
-    /// Path to the LLVM bitcode to optimize 
-    #[clap(short='i', long="input-bc")]
+    /// Path to the LLVM bitcode to optimize
+    #[clap(short = 'i', long = "input-bc")]
     input_bc_path: String,
 
-    /// Path to write the optimized program to 
-    #[clap(short, long="out", default_value = "out.ll")]
+    /// Path to write the optimized program to
+    #[clap(short, long = "out", default_value = "out.ll")]
     out_path: String,
 
     #[clap(short, long, parse(from_occurrences))]
-    verbosity: usize
+    verbosity: usize,
 }
 
 fn main() {
@@ -39,7 +39,9 @@ fn main() {
             Ok(de) => de,
             Err(e) => fatal_error(format!("Failed to parse instance: {e}").as_str()),
         },
-        Err(e) => fatal_error(format!("Cannot open instance file `{}`: {e}", args.inst_path).as_str()),
+        Err(e) => {
+            fatal_error(format!("Cannot open instance file `{}`: {e}", args.inst_path).as_str())
+        }
     };
 
     let module = Module::from_bc_path(args.input_bc_path).unwrap();
