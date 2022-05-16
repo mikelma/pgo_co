@@ -1,4 +1,5 @@
 // use rand::seq::SliceRandom;
+use clap::Parser;
 
 use pgo_co::{
     co::{self, CoProblem},
@@ -7,39 +8,41 @@ use pgo_co::{
 };
 
 use std::collections::HashMap;
-use std::{env, fs};
+use std::fs;
+
+/// Optimize profiled LLVM-IR with metaheuristics
+#[derive(Parser, Debug)]
+#[clap(author, version, about, long_about = None)]
+struct Args {
+    /// Path to the CO problem instance 
+    #[clap(short='p', long="instance")]
+    inst_path: String,
+
+    /// Path to the LLVM bitcode to optimize 
+    #[clap(short='i', long="input-bc")]
+    input_bc_path: String,
+
+    /// Path to write the optimized program to 
+    #[clap(short, long="out", default_value = "out.ll")]
+    out_path: String,
+
+    #[clap(short, long, parse(from_occurrences))]
+    verbosity: usize
+}
 
 fn main() {
-    let mut args = env::args().skip(1);
-
-    // get the path to the CoProblem instance
-    let problem_path = match args.next() {
-        Some(p) => p,
-        None => fatal_error("Missing path to the problem instance"),
-    };
-
-    // read the path to the input LLVM-IR bitcode
-    let in_bc_path = match args.next() {
-        Some(p) => p,
-        None => fatal_error("Missing path to the LLVM-IR bitcode to parse"),
-    };
-
-    // path to the output (optimized) LLVM-IR file
-    let out_path = match args.next() {
-        Some(p) => p,
-        None => fatal_error("Missing output path"),
-    };
+    let args = Args::parse();
 
     // deserialize CO problem instance
-    let problem_set: HashMap<String, CoProblem> = match fs::read_to_string(&problem_path) {
+    let problem_set: HashMap<String, CoProblem> = match fs::read_to_string(&args.inst_path) {
         Ok(in_str) => match serde_json::from_str(&in_str) {
             Ok(de) => de,
             Err(e) => fatal_error(format!("Failed to parse instance: {e}").as_str()),
         },
-        Err(e) => fatal_error(format!("Cannot open instance file `{problem_path}`: {e}").as_str()),
+        Err(e) => fatal_error(format!("Cannot open instance file `{}`: {e}", args.inst_path).as_str()),
     };
 
-    let module = Module::from_bc_path(in_bc_path).unwrap();
+    let module = Module::from_bc_path(args.input_bc_path).unwrap();
     // let mut rng = rand::thread_rng();
 
     for function in &module.functions {
@@ -57,9 +60,14 @@ fn main() {
         let identity = (0..problem.n).collect::<Vec<usize>>();
         let (ls_sol, ls_fitness) = co::local_search::run(&problem, 1000);
 
-        println!("{}", function.name);
-        println!("  * Fitness of identity:    {}", problem.eval(&identity));
-        println!("  * LS fitness:             {}\n", ls_fitness);
+        if args.verbosity > 0 {
+            println!("{}", function.name);
+            println!("  * Fitness of identity:    {}", problem.eval(&identity));
+            println!("  * LS fitness:             {}\n", ls_fitness);
+            if args.verbosity > 1 {
+                println!("  * Optimized solution: {:?}", ls_sol);
+            }
+        }
 
         ir_modifier::reorder_blocks(function.function_ref, &ls_sol);
     }
@@ -102,7 +110,7 @@ fn main() {
     }
     */
 
-    if let Err(e) = module.to_path(&out_path) {
-        fatal_error(format!("Cannot write output to `{out_path}`: {e}").as_str());
+    if let Err(e) = module.to_path(&args.out_path) {
+        fatal_error(format!("Cannot write output to `{}`: {e}", &args.out_path).as_str());
     }
 }

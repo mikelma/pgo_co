@@ -1,20 +1,35 @@
+use clap::Parser;
+
 use pgo_co::{co, profdata::Module};
 
-use std::env;
+/// Inpect profile metadata from LLVM-IR bitcode 
+#[derive(Parser, Debug)]
+#[clap(author, version, about, long_about = None)]
+struct Args {
+    /// Name of the function to inspect. If not provided, all functions are inspected
+    #[clap(short='f', long="inspect-func")]
+    inspect_func: Option<String>,
+
+    /// Path to the LLVM bitcode to inspect 
+    #[clap(short='i', long="input-bc")]
+    input_bc_path: String,
+
+    // TODO: Add verbosity option
+    // #[clap(short, long, parse(from_occurrences))]
+    // verbosity: usize
+}
 
 fn main() {
-    let mut args = env::args().skip(1);
-    let in_path = match args.next() {
-        Some(p) => p,
-        None => {
-            eprintln!("Missing path to the LLVM-IR bitcode to parse");
-            std::process::exit(1);
-        }
-    };
-
-    let module = Module::from_bc_path(in_path).unwrap();
+    let args = Args::parse();
+    let module = Module::from_bc_path(args.input_bc_path).unwrap();
 
     for func in module.functions {
+        if let Some(fn_name) = &args.inspect_func {
+            if func.name != *fn_name {
+                continue;
+            }
+        }
+
         println!("* name: {}", func.name);
 
         // print basic block info
@@ -31,5 +46,6 @@ fn main() {
         problem.c.iter().for_each(|v| println!("     {:?}", v));
 
         println!("  + s:\n    {:?}", problem.s);
+        println!();
     }
 }
