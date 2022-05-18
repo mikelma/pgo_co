@@ -5,6 +5,8 @@ pub mod ir_modifier;
 pub mod llvm_utils;
 pub mod profdata;
 
+pub const MAX_OPT_MILLIS: u128 = 10_000;
+
 #[cfg(feature = "log")]
 pub mod log;
 

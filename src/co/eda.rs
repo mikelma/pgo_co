@@ -1,32 +1,32 @@
 use rand::{distributions::*, seq::SliceRandom};
 
+use std::time::Instant;
+
 #[cfg(feature = "log")]
 use crate::log;
 
 use super::CoProblem;
+use crate::MAX_OPT_MILLIS;
 
 struct Umd(Vec<Vec<usize>>);
 struct Population(Vec<Vec<usize>>);
 
-pub fn run(
-    problem: &CoProblem,
-    pop_size: usize,
-    num_select: usize,
-    max_evals: usize,
-) -> (Vec<usize>, u64) {
+pub fn run(problem: &CoProblem, pop_size: usize, num_select: usize) -> (Vec<usize>, u64) {
+    let time = Instant::now();
     let mut pop = Population::init(problem.n, pop_size);
 
     let mut best_f = 0;
     let mut best_sol: Vec<usize> = vec![];
+
+    #[cfg(feature = "log")]
     let mut evals = 0;
 
     loop {
-        if evals + pop_size > max_evals {
+        if MAX_OPT_MILLIS <= time.elapsed().as_millis() {
             break;
         }
 
         let best_sol_info = pop.select_survivors(problem, num_select);
-        evals += pop_size;
 
         let (iter_best_idx, iter_best_f) = best_sol_info
             .iter()
@@ -40,6 +40,8 @@ pub fn run(
 
         #[cfg(feature = "log")]
         {
+            evals += pop_size;
+            log::log("time", time.elapsed().as_millis());
             log::log("evaluation", evals);
             log::log("best fitness", best_f);
             log::log("pop size", pop_size);
@@ -64,7 +66,6 @@ pub fn run(
     #[cfg(feature = "log")]
     {
         log::set_attr("algorithm", "EDA");
-        log::set_attr("max evals", max_evals);
         log::write();
     }
 

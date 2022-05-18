@@ -55,6 +55,7 @@ pub fn set_log_dir<T: ToString>(dir: T) {
 
 pub fn write() {
     let r = rand::random::<usize>();
+    set_attr("id", r);
     let algo = DATA
         .lock()
         .unwrap()

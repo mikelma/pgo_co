@@ -1,19 +1,22 @@
 use rand::prelude::*;
 use rand::seq::SliceRandom;
 
+use std::time::Instant;
+
 #[cfg(feature = "log")]
 use crate::log;
 
 use super::CoProblem;
+use crate::MAX_OPT_MILLIS;
 
 pub fn run(
     problem: &CoProblem,
-    max_evals: usize,
     temp_init: f64,
     temp_update: f64,
     temp_end: f64,
     temp_update_iters: usize,
 ) -> (Vec<usize>, u64) {
+    let time = Instant::now();
     let mut temp = temp_init;
 
     let mut rng = rand::thread_rng();
@@ -21,11 +24,12 @@ pub fn run(
     best_solution.shuffle(&mut rng);
 
     let mut best_solution_f = problem.eval(&best_solution);
-    let mut evals = 1;
 
     let mut solution = best_solution.clone();
     let mut solution_f = problem.eval(&solution);
-    evals += 1;
+
+    #[cfg(feature = "log")]
+    let mut evals = 2;
 
     loop {
         for _it in 0..temp_update_iters {
@@ -34,10 +38,11 @@ pub fn run(
             let (_i, _j) = random_swap(&mut neighbor);
 
             let neighbor_f = problem.eval(&neighbor);
-            evals += 1;
 
             #[cfg(feature = "log")]
             {
+                evals += 1;
+                log::log("time", time.elapsed().as_millis());
                 log::log("evaluation", evals);
                 log::log("best fitness", best_solution_f);
             }
@@ -60,7 +65,7 @@ pub fn run(
                 }
             }
 
-            if evals >= max_evals {
+            if MAX_OPT_MILLIS <= time.elapsed().as_millis() {
                 break;
             }
         }
@@ -68,7 +73,7 @@ pub fn run(
         if temp > temp_end {
             temp *= temp_update;
         }
-        if evals >= max_evals {
+        if MAX_OPT_MILLIS <= time.elapsed().as_millis() {
             break;
         }
     }
@@ -76,7 +81,6 @@ pub fn run(
     #[cfg(feature = "log")]
     {
         log::set_attr("algorithm", "SA");
-        log::set_attr("max evals", max_evals);
         log::set_attr("temp init", temp_init);
         log::set_attr("temp update", temp_update);
         log::set_attr("temp end", temp_end);

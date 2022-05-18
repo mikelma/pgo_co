@@ -119,15 +119,14 @@ fn main() {
             pgo_co::log::set_attr("opt file", &opt_file);
             pgo_co::log::set_attr("instance", &inst_name);
             pgo_co::log::set_attr("identity fitness", iden_fitness);
+            pgo_co::log::set_attr("max opt time", pgo_co::MAX_OPT_MILLIS);
         }
 
         let (opt_sol, opt_fitness) = match args.algorithm {
-            Algorithm::LocalSearch => co::local_search::run(&problem, 1000),
+            Algorithm::LocalSearch => co::local_search::run(&problem),
             Algorithm::Constructive => co::constructive::construct_solution(&problem, 3, 2),
-            Algorithm::SimulatedAnnealing => {
-                co::sa::run(&problem, 1000, 1000000.0, 0.95, 10000.0, 100)
-            }
-            Algorithm::Eda => co::eda::run(&problem, 300, 100, 3000),
+            Algorithm::SimulatedAnnealing => co::sa::run(&problem, 1000000.0, 0.95, 10000.0, 100),
+            Algorithm::Eda => co::eda::run(&problem, 300, 100),
         };
 
         ir_modifier::reorder_blocks(function.function_ref, &opt_sol);

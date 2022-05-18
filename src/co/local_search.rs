@@ -3,14 +3,21 @@ use rand::seq::SliceRandom;
 #[cfg(feature = "log")]
 use crate::log;
 
-use super::CoProblem;
+use std::time::Instant;
 
-pub fn run(problem: &CoProblem, max_evals: usize) -> (Vec<usize>, u64) {
+use super::CoProblem;
+use crate::MAX_OPT_MILLIS;
+
+pub fn run(problem: &CoProblem) -> (Vec<usize>, u64) {
+    let time = Instant::now();
+
     let mut rng = rand::thread_rng();
     let mut best_solution = (0..problem.n).collect::<Vec<usize>>();
     best_solution.shuffle(&mut rng);
 
     let mut best_solution_f = problem.eval(&best_solution);
+
+    #[cfg(feature = "log")]
     let mut evals = 1;
 
     loop {
@@ -27,12 +34,13 @@ pub fn run(problem: &CoProblem, max_evals: usize) -> (Vec<usize>, u64) {
 
                 #[cfg(feature = "log")]
                 {
+                    evals += 1;
+                    log::log("time", time.elapsed().as_millis());
                     log::log("evaluation", evals);
                     log::log("best fitness", best_solution_f);
                 }
 
                 let solution_f = problem.eval(&solution);
-                evals += 1;
 
                 if solution_f > best_solution_f {
                     best_solution_f = solution_f;
@@ -42,7 +50,7 @@ pub fn run(problem: &CoProblem, max_evals: usize) -> (Vec<usize>, u64) {
                     break;
                 }
 
-                if evals >= max_evals {
+                if MAX_OPT_MILLIS <= time.elapsed().as_millis() {
                     break;
                 }
 
@@ -50,12 +58,12 @@ pub fn run(problem: &CoProblem, max_evals: usize) -> (Vec<usize>, u64) {
                 solution[j] = solution[i];
                 solution[i] = v;
             }
-            if evals >= max_evals {
+            if MAX_OPT_MILLIS <= time.elapsed().as_millis() {
                 break;
             }
         }
 
-        if !update || evals >= max_evals {
+        if !update || MAX_OPT_MILLIS <= time.elapsed().as_millis() {
             break;
         }
     }
@@ -63,7 +71,6 @@ pub fn run(problem: &CoProblem, max_evals: usize) -> (Vec<usize>, u64) {
     #[cfg(feature = "log")]
     {
         log::set_attr("algorithm", "LS");
-        log::set_attr("max evals", max_evals);
         log::write();
     }
 
