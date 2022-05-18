@@ -4,9 +4,13 @@ use rand::{distributions::*, seq::SliceRandom};
 struct Umd(Vec<Vec<usize>>);
 struct Population(Vec<Vec<usize>>);
 
-pub fn run(problem: &CoProblem, pop_size: usize, iters: usize) -> (Vec<usize>, u64) {
+pub fn run(
+    problem: &CoProblem,
+    pop_size: usize,
+    num_select: usize,
+    iters: usize,
+) -> (Vec<usize>, u64) {
     let mut pop = Population::init(problem.n, pop_size);
-    let num_select = pop_size / 2;
 
     let mut best_f = 0;
     let mut best_sol: Vec<usize> = vec![];
@@ -86,7 +90,8 @@ impl Population {
             .map(|(i, s)| (i, problem.eval(s)))
             .collect::<Vec<(usize, u64)>>();
 
-        f.sort_by(|(_, s1), (_, s2)| s2.cmp(s1));
+        // f.sort_by(|(_, s1), (_, s2)| s2.cmp(s1));
+        f.sort_by(|(_, s1), (_, s2)| s1.cmp(s2));
         // just return the first `num_select` solutions
         f.truncate(num_select);
         f
