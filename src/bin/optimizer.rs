@@ -7,8 +7,9 @@ use pgo_co::{
     profdata::Module,
 };
 
-use std::collections::HashMap;
 use std::fs;
+use std::str::FromStr;
+use std::{collections::HashMap, path::PathBuf};
 
 /// Optimize profiled LLVM-IR with metaheuristics
 #[derive(Parser, Debug)]
@@ -28,6 +29,34 @@ struct Args {
 
     #[clap(short, long, parse(from_occurrences))]
     verbosity: usize,
+
+    #[clap(short, long, default_value = "LS")]
+    algorithm: Algorithm,
+}
+
+#[derive(Debug)]
+enum Algorithm {
+    Constructive,
+    LocalSearch,
+    SimulatedAnnealing,
+    Eda,
+}
+
+impl FromStr for Algorithm {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        use Algorithm::*;
+        match s {
+            "constructive" => Ok(Constructive),
+            "LS" => Ok(LocalSearch),
+            "SA" => Ok(SimulatedAnnealing),
+            "EDA" => Ok(Eda),
+            _ => Err(format!(
+                "Invalid algorithm {s}. Valid options are: constructive, LS, SA and EDA"
+            )),
+        }
+    }
 }
 
 fn main() {
@@ -44,8 +73,22 @@ fn main() {
         }
     };
 
-    let module = Module::from_bc_path(args.input_bc_path).unwrap();
+    let module = Module::from_bc_path(&args.input_bc_path).unwrap();
     // let mut rng = rand::thread_rng();
+
+    #[cfg(feature = "log")]
+    let opt_file = PathBuf::from(args.input_bc_path)
+        .file_stem()
+        .unwrap()
+        .to_string_lossy()
+        .to_string();
+
+    #[cfg(feature = "log")]
+    let inst_name = PathBuf::from(args.inst_path)
+        .file_stem()
+        .unwrap()
+        .to_string_lossy()
+        .to_string();
 
     for function in &module.functions {
         let problem = match problem_set.get(&function.name) {
@@ -60,18 +103,36 @@ fn main() {
         };
 
         let identity = (0..problem.n).collect::<Vec<usize>>();
-        let (ls_sol, ls_fitness) = co::local_search::run(&problem, 1000);
+        let iden_fitness = problem.eval(&identity);
+
+        #[cfg(feature = "log")]
+        {
+            pgo_co::log::set_attr("function", &function.name);
+            pgo_co::log::set_attr("num blocks", &function.num_bbs);
+            pgo_co::log::set_attr("opt file", &opt_file);
+            pgo_co::log::set_attr("instance", &inst_name);
+            pgo_co::log::set_attr("identity fitness", iden_fitness);
+        }
+
+        let (opt_sol, opt_fitness) = match args.algorithm {
+            Algorithm::LocalSearch => co::local_search::run(&problem, 1000),
+            Algorithm::Constructive => co::constructive::construct_solution(&problem, 3, 2),
+            Algorithm::SimulatedAnnealing => {
+                co::sa::run(&problem, 1000, 1000000.0, 0.95, 10000.0, 100)
+            }
+            Algorithm::Eda => co::eda::run(&problem, 300, 100, 3000),
+        };
+
+        ir_modifier::reorder_blocks(function.function_ref, &opt_sol);
 
         if args.verbosity > 0 {
             println!("{}", function.name);
-            println!("  * Fitness of identity:    {}", problem.eval(&identity));
-            println!("  * LS fitness:             {}\n", ls_fitness);
+            println!("  * Fitness of identity: {}", iden_fitness);
+            println!("  * {:?} fitness: {}\n", args.algorithm, opt_fitness);
             if args.verbosity > 1 {
-                println!("  * Optimized solution: {:?}", ls_sol);
+                println!("  * Optimized solution: {:?}", opt_sol);
             }
         }
-
-        ir_modifier::reorder_blocks(function.function_ref, &ls_sol);
     }
 
     /*

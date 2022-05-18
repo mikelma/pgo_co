@@ -1,6 +1,10 @@
-use super::CoProblem;
 use rand::prelude::*;
 use rand::seq::SliceRandom;
+
+#[cfg(feature = "log")]
+use crate::log;
+
+use super::CoProblem;
 
 pub fn run(
     problem: &CoProblem,
@@ -32,6 +36,12 @@ pub fn run(
             let neighbor_f = problem.eval(&neighbor);
             evals += 1;
 
+            #[cfg(feature = "log")]
+            {
+                log::log("evaluation", evals);
+                log::log("best fitness", best_solution_f);
+            }
+
             let energy = (neighbor_f as i64 - solution_f as i64) as f64;
 
             if energy > 0. {
@@ -61,6 +71,17 @@ pub fn run(
         if evals >= max_evals {
             break;
         }
+    }
+
+    #[cfg(feature = "log")]
+    {
+        log::set_attr("algorithm", "SA");
+        log::set_attr("max evals", max_evals);
+        log::set_attr("temp init", temp_init);
+        log::set_attr("temp update", temp_update);
+        log::set_attr("temp end", temp_end);
+        log::set_attr("temp update iters", temp_update_iters);
+        log::write();
     }
 
     (best_solution, best_solution_f)

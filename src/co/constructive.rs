@@ -1,9 +1,13 @@
-use super::CoProblem;
 use rand::seq::SliceRandom;
 
 use std::collections::VecDeque;
 
-pub fn construct_solution(problem: &CoProblem, tau1: u32, tau2: u32) -> Vec<usize> {
+use super::CoProblem;
+
+#[cfg(feature = "log")]
+use crate::log;
+
+pub fn construct_solution(problem: &CoProblem, tau1: u32, tau2: u32) -> (Vec<usize>, u64) {
     let mut solution = VecDeque::with_capacity(problem.n);
 
     let max_size = problem.s.iter().sum::<usize>() as u64;
@@ -98,5 +102,17 @@ pub fn construct_solution(problem: &CoProblem, tau1: u32, tau2: u32) -> Vec<usiz
         }
     }
 
-    solution.into()
+    let s: Vec<usize> = solution.into();
+    let fitness = problem.eval(&s);
+
+    #[cfg(feature = "log")]
+    {
+        log::set_attr("algorithm", "constructive");
+        log::set_attr("tau1", tau1);
+        log::set_attr("tau2", tau2);
+        log::set_attr("best fitness", fitness);
+        log::write();
+    }
+
+    (s, fitness)
 }

@@ -5,6 +5,13 @@ pub mod ir_modifier;
 pub mod llvm_utils;
 pub mod profdata;
 
+#[cfg(feature = "log")]
+pub mod log;
+
+#[cfg(feature = "log")]
+#[macro_use]
+extern crate lazy_static;
+
 pub fn fatal_error(msg: &str) -> ! {
     eprintln!("\x1b[31;1m[FATAL]\x1b[0m {msg}");
     eprintln!("Exitting...");

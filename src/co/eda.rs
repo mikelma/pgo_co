@@ -1,5 +1,9 @@
-use super::CoProblem;
 use rand::{distributions::*, seq::SliceRandom};
+
+#[cfg(feature = "log")]
+use crate::log;
+
+use super::CoProblem;
 
 struct Umd(Vec<Vec<usize>>);
 struct Population(Vec<Vec<usize>>);
@@ -8,29 +12,38 @@ pub fn run(
     problem: &CoProblem,
     pop_size: usize,
     num_select: usize,
-    iters: usize,
+    max_evals: usize,
 ) -> (Vec<usize>, u64) {
     let mut pop = Population::init(problem.n, pop_size);
 
     let mut best_f = 0;
     let mut best_sol: Vec<usize> = vec![];
+    let mut evals = 0;
 
-    // println!("* pop:");
-    // pop.0.iter().for_each(|p| println!("{:?}", p));
-
-    for it in 0..iters {
-        #[cfg(debug_assertions)]
-        pop.stats(it, problem);
+    loop {
+        if evals + pop_size > max_evals {
+            break;
+        }
 
         let best_sol_info = pop.select_survivors(problem, num_select);
+        evals += pop_size;
 
         let (iter_best_idx, iter_best_f) = best_sol_info
             .iter()
             .max_by(|(_, a), (_, b)| a.cmp(b))
             .unwrap();
+
         if *iter_best_f > best_f {
             best_sol = pop.0[*iter_best_idx].clone();
             best_f = *iter_best_f;
+        }
+
+        #[cfg(feature = "log")]
+        {
+            log::log("evaluation", evals);
+            log::log("best fitness", best_f);
+            log::log("pop size", pop_size);
+            log::log("num select", num_select);
         }
 
         // indexes of the non selected solutions (worsts)
@@ -46,6 +59,13 @@ pub fn run(
         let distrib = Umd::from(&bests);
 
         distrib.sample_and_replace(&mut pop, &worsts_index);
+    }
+
+    #[cfg(feature = "log")]
+    {
+        log::set_attr("algorithm", "EDA");
+        log::set_attr("max evals", max_evals);
+        log::write();
     }
 
     (best_sol, best_f)
@@ -64,6 +84,7 @@ impl Population {
         Population(pop)
     }
 
+    #[allow(dead_code)]
     #[cfg(debug_assertions)]
     pub fn stats(&self, iter: usize, problem: &CoProblem) {
         let pop_size = self.0.len();
@@ -154,7 +175,6 @@ impl Umd {
                 wi.update_weights(new_w.as_slice()).unwrap();
             }
             sampled.clear();
-            // std::process::exit(42);
         }
     }
 }

@@ -1,5 +1,9 @@
-use super::CoProblem;
 use rand::seq::SliceRandom;
+
+#[cfg(feature = "log")]
+use crate::log;
+
+use super::CoProblem;
 
 pub fn run(problem: &CoProblem, max_evals: usize) -> (Vec<usize>, u64) {
     let mut rng = rand::thread_rng();
@@ -20,6 +24,12 @@ pub fn run(problem: &CoProblem, max_evals: usize) -> (Vec<usize>, u64) {
                 let v = solution[i];
                 solution[i] = solution[j];
                 solution[j] = v;
+
+                #[cfg(feature = "log")]
+                {
+                    log::log("evaluation", evals);
+                    log::log("best fitness", best_solution_f);
+                }
 
                 let solution_f = problem.eval(&solution);
                 evals += 1;
@@ -48,6 +58,13 @@ pub fn run(problem: &CoProblem, max_evals: usize) -> (Vec<usize>, u64) {
         if !update || evals >= max_evals {
             break;
         }
+    }
+
+    #[cfg(feature = "log")]
+    {
+        log::set_attr("algorithm", "LS");
+        log::set_attr("max evals", max_evals);
+        log::write();
     }
 
     (best_solution, best_solution_f)
