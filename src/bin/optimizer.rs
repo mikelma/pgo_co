@@ -32,6 +32,10 @@ struct Args {
 
     #[clap(short, long, default_value = "LS")]
     algorithm: Algorithm,
+
+    #[cfg(feature = "log")]
+    #[clap(short, long, default_value = ".")]
+    log_path: String,
 }
 
 #[derive(Debug)]
@@ -75,6 +79,9 @@ fn main() {
 
     let module = Module::from_bc_path(&args.input_bc_path).unwrap();
     // let mut rng = rand::thread_rng();
+
+    #[cfg(feature = "log")]
+    pgo_co::log::set_log_dir(args.log_path);
 
     #[cfg(feature = "log")]
     let opt_file = PathBuf::from(args.input_bc_path)
