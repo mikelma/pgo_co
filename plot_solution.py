@@ -7,6 +7,8 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 
+plt.rc("font", size=20)
+
 
 def fatal_error(msg):
     print(f"\x1b[31;1m[FATAL]\x1b[0m {msg}")
@@ -138,12 +140,52 @@ def block_layout(permu, C, s):
     plt.bar(range(n), f, 0.8, align="center", log=False, color=colors)
     fitness = eval_solution(solution, C, s)
     plt.title(f"Block layout (fitness: {fitness})")
-    # plt.ylabel('Call frequency (log scale)')
     plt.ylabel("Call frequency")
     plt.xlabel("Block")
     plt.xticks(range(n), permu)
     plt.colorbar(mpl.cm.ScalarMappable(norm=None, cmap="BuPu"))
 
+
+def block_layout_matrix(permu, C, s):
+    identity = np.arange(n, dtype=int)
+
+    sol_f = eval_solution(permu, C, s)
+    iden_f = eval_solution(identity, C, s)
+
+    f, ax = plt.subplots(2, 2, gridspec_kw={"height_ratios": [3, 1]})
+
+    ax[0][0].matshow(C)
+    ax[0][0].set_xlabel("Block")
+    ax[0][0].set_ylabel("Block")
+    ax[0][0].set_title("Original layout\n(f={:.2e})".format(iden_f))
+    ax[0][0].set_xticklabels([])
+    ax[0][0].set_yticklabels([])
+
+    ordered = C[permu][:, permu]
+
+    ax[0][1].matshow(ordered)
+    ax[0][1].set_xlabel("Block")
+    ax[0][1].set_ylabel("Block")
+    ax[0][1].set_title("Optimized layout\n(f={:.2e})".format(sol_f))
+    ax[0][1].get_xaxis().set_visible(False)
+    ax[0][1].get_yaxis().set_visible(False)
+
+    ax[1][0].bar(range(len(s)), s)
+    ax[1][0].set_xlabel("Block")
+    ax[1][0].set_ylabel("Size")
+    ax[1][0].set_xticklabels([])
+
+    for key, spine in ax[1][0].spines.items():
+        spine.set_visible(False)
+
+    ax[1][1].bar(range(len(s[permu])), s[permu])
+
+    ax[1][1].set_axis_off()
+
+
+print("*** Block layout matrix ***")
+block_layout_matrix(solution, c, s)
+plt.show()
 
 print("*** Block layout ***")
 block_layout(solution, c, s)
