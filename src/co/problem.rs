@@ -150,4 +150,12 @@ impl CoProblem {
 
         return sum;
     }
+
+    /// Returns `true` if the sum of all elements of the `C` matrix of the `CoProblem` is zero.
+    pub fn is_zeros(&self) -> bool {
+        self.c
+            .iter()
+            .find(|row| row.iter().sum::<u64>() != 0)
+            .is_none()
+    }
 }

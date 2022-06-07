@@ -13,9 +13,20 @@ struct Args {
     #[clap(short, long = "input-bc")]
     input_bc_path: String,
 
-    /// Path to the output file. If not provided, the output is dumped to stdout
+    /// Path to the output file. If not provided, the output is
+    /// dumped to stdout
     #[clap(short, long)]
     out_path: Option<String>,
+
+    /// Minimum number of basic blocks that a function must have in
+    // order to be considered. Disabled by default
+    #[clap(long)]
+    min_bb_num: Option<usize>,
+
+    /// Maximum number of basic blocks that a function must have in
+    /// order to be considered. Disabled by default
+    #[clap(long)]
+    max_bb_num: Option<usize>,
 }
 
 fn main() {
@@ -27,8 +38,22 @@ fn main() {
     for func in module.functions {
         // do nothing if the function has no metadata
         if let Some(problem) = CoProblem::block_reordering_from(&func) {
-            // TODO: Don't push the probelm if the C matrix is only zeros
-            map.insert(func.name, problem);
+            // check minimum number of BBs
+            match args.min_bb_num {
+                Some(min) if min > problem.n => continue,
+                _ => (),
+            }
+
+            // check maximum number of BBs
+            match args.max_bb_num {
+                Some(max) if max <= problem.n => continue,
+                _ => (),
+            }
+
+            // Don't push the probelm if the C matrix is only zeros
+            if !problem.is_zeros() {
+                map.insert(func.name, problem);
+            }
         }
     }
 
