@@ -1,6 +1,9 @@
 use clap::Parser;
 
-use pgo_co::{co::CoProblem, profdata::Module};
+use pgo_co::{
+    co::CoProblem,
+    profdata::{Function, Module},
+};
 
 use std::collections::HashMap;
 use std::fs;
@@ -17,6 +20,11 @@ struct Args {
     /// dumped to stdout
     #[clap(short, long)]
     out_path: Option<String>,
+
+    /// Maximum number of functions to consider. Functions are
+    /// sorted from hottest to coldest if this argument is used.
+    #[clap(short = 'n', long)]
+    max_num_funcs: Option<usize>,
 
     /// Minimum number of basic blocks that a function must have in
     // order to be considered. Disabled by default
@@ -35,7 +43,18 @@ fn main() {
     let module = Module::from_bc_path(args.input_bc_path).unwrap();
     let mut map = HashMap::new();
 
-    for func in module.functions {
+    let mut functions = module
+        .functions_sort_hottest()
+        .iter()
+        .map(|(_, v)| *v)
+        .collect::<Vec<&Function>>();
+
+    // if needed, truncate the list of functions to consider
+    if let Some(n) = args.max_num_funcs {
+        functions.truncate(n);
+    }
+
+    for func in functions {
         // do nothing if the function has no metadata
         if let Some(problem) = CoProblem::block_reordering_from(&func) {
             // check minimum number of BBs
@@ -52,7 +71,7 @@ fn main() {
 
             // Don't push the probelm if the C matrix is only zeros
             if !problem.is_zeros() {
-                map.insert(func.name, problem);
+                map.insert(func.name.clone(), problem);
             }
         }
     }
