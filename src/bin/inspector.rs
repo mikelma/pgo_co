@@ -40,7 +40,13 @@ fn main() {
         }
 
         // print CO problem generated
-        let problem = co::CoProblem::block_reordering_from(&func).unwrap();
+        let problem = match co::CoProblem::block_reordering_from(&func) {
+            Some(p) => p,
+            None => {
+                println!("  !! No profile data !!");
+                continue;
+            }
+        };
         println!("  + C:");
         problem.c.iter().for_each(|v| println!("     {:?}", v));
 

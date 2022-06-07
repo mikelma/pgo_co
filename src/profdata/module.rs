@@ -96,6 +96,10 @@ impl Module {
         }
     }
 
+    pub fn get_function(&self, name: &str) -> Option<&Function> {
+        self.functions.iter().find(|f| f.name == name)
+    }
+
     /// Returns a list of all the functions of the module ordered by the entry count metadata
     /// (in descending order).
     pub fn functions_sort_hottest(&self) -> Vec<(u64, &Function)> {

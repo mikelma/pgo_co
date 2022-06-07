@@ -25,8 +25,11 @@ fn main() {
     let mut map = HashMap::new();
 
     for func in module.functions {
-        let problem = CoProblem::block_reordering_from(&func).unwrap();
-        map.insert(func.name, problem);
+        // do nothing if the function has no metadata
+        if let Some(problem) = CoProblem::block_reordering_from(&func) {
+            // TODO: Don't push the probelm if the C matrix is only zeros
+            map.insert(func.name, problem);
+        }
     }
 
     let inst_str = serde_json::to_string(&map).unwrap();

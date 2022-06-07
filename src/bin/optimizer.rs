@@ -7,9 +7,9 @@ use pgo_co::{
     profdata::Module,
 };
 
+use std::collections::HashMap;
 use std::fs;
 use std::str::FromStr;
-use std::{collections::HashMap, path::PathBuf};
 
 /// Optimize profiled LLVM-IR with metaheuristics
 #[derive(Parser, Debug)]
@@ -97,17 +97,30 @@ fn main() {
         .to_string_lossy()
         .to_string();
 
-    for function in &module.functions {
-        let problem = match problem_set.get(&function.name) {
-            Some(p) => p,
-            None => fatal_error(
-                format!(
-                    "Function `{}` exists in the input program but not in the instance",
-                    function.name
-                )
-                .as_str(),
-            ),
-        };
+    // for function in &module.functions {
+    for (fn_name, problem) in problem_set.iter() {
+        let function =
+            match module.get_function(fn_name) {
+                Some(f) => f,
+                None => fatal_error(
+                    format!(
+                        "Function `{fn_name}` exists in the instance but not in the input program",
+                    )
+                    .as_str(),
+                ),
+            };
+        /*
+            let problem = match problem_set.get(&.name) {
+                Some(p) => p,
+                None => fatal_error(
+                    format!(
+                        "Function `{}` exists in the input program but not in the instance",
+                        function.name
+                    )
+                    .as_str(),
+                ),
+            };
+        */
 
         let identity = (0..problem.n).collect::<Vec<usize>>();
         let iden_fitness = problem.eval(&identity);
