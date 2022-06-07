@@ -142,10 +142,17 @@ fn main() {
             Algorithm::Eda => co::eda::run(&problem, 300, 100),
         };
 
-        ir_modifier::reorder_blocks(function.function_ref, &opt_sol);
+        if opt_fitness > iden_fitness {
+            ir_modifier::reorder_blocks(function.function_ref, &opt_sol);
+        }
 
         if args.verbosity > 0 {
             println!("{}", function.name);
+
+            if opt_fitness <= iden_fitness {
+                println!("*** Function not optimized ***");
+            }
+
             println!("  * Fitness of identity: {}", iden_fitness);
             println!("  * {:?} fitness: {}\n", args.algorithm, opt_fitness);
             if args.verbosity > 1 {
